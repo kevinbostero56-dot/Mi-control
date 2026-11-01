@@ -2,6 +2,9 @@ name: Compilar APK
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,7 +20,23 @@ jobs:
           gradle-version: 8.7
       - run: gradle assembleDebug
         working-directory: MiControl
+        env:
+          MAPTILER_KEY: ${{ secrets.MAPTILER_KEY }}
+          ORS_KEY: ${{ secrets.ORS_KEY }}
       - uses: actions/upload-artifact@v4
         with:
           name: MiControl-APK
           path: MiControl/app/build/outputs/apk/debug/*.apk
+      - id: ver
+        run: |
+          code=$(grep -oP 'versionCode = \K[0-9]+' MiControl/app/build.gradle.kts)
+          name=$(grep -oP 'versionName = "\K[^"]+' MiControl/app/build.gradle.kts)
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          cp MiControl/app/build/outputs/apk/debug/app-debug.apk "MiControl-$name.apk"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ steps.ver.outputs.code }}
+          name: Mi Control ${{ steps.ver.outputs.name }}
+          body_path: MiControl/NOVEDADES.txt
+          files: MiControl-${{ steps.ver.outputs.name }}.apk
