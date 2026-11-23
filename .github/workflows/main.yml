@@ -23,6 +23,7 @@ jobs:
         env:
           MAPTILER_KEY: ${{ secrets.MAPTILER_KEY }}
           ORS_KEY: ${{ secrets.ORS_KEY }}
+          COMPU_URL: ${{ secrets.COMPU_URL }}
       - uses: actions/upload-artifact@v4
         with:
           name: MiControl-APK
